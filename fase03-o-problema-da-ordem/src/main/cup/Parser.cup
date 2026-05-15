@@ -82,3 +82,72 @@ Identifier = {Letter}({Letter}|{Digit}|_){0,31}
 
 /* Regra para o Final do Arquivo */
 <<EOF>>             { return token(Tag.EOF, ""); }
+
+// REGRA: prop = prop_exp, {'implies', prop_exp} ;
+    private void prop() throws Exception {
+        prop_exp();
+
+        while (token.tag == Tag.IMPLIES) {
+            accept(Tag.IMPLIES);
+            prop_exp();
+        }
+    }
+
+    // REGRA: prop_exp = prop_term, {'or', prop_term} ;
+    private void prop_exp() throws Exception {
+        prop_term();
+
+        while (token.tag == Tag.OR) {
+            accept(Tag.OR);
+            prop_term();
+        }
+    }
+
+    // REGRA: prop_term = prop_factor, {'and', prop_factor} ;
+    private void prop_term() throws Exception {
+        prop_factor();
+
+        while (token.tag == Tag.AND) {
+            accept(Tag.AND);
+            prop_factor();
+        }
+    }
+
+    // REGRA: prop_factor = {'not'}, prop_element ;
+    private void prop_factor() throws Exception {
+
+        while (token.tag == Tag.NOT) {
+            accept(Tag.NOT);
+        }
+
+        prop_element();
+    }
+
+    // REGRA: prop_element = '(' prop ')' | prop_letter | prop_constant ;
+    private void prop_element() throws Exception {
+
+        switch (token.tag) {
+
+            case LPAREN:
+                accept(Tag.LPAREN);
+                prop();
+                accept(Tag.RPAREN);
+                break;
+
+            case LETTER:
+                accept(Tag.LETTER);
+                break;
+
+            case TRUE:
+                accept(Tag.TRUE);
+                break;
+
+            case FALSE:
+                accept(Tag.FALSE);
+                break;
+
+            default:
+                error("LPAREN, LETTER, TRUE ou FALSE");
+        }
+    }
+}
